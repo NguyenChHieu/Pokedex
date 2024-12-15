@@ -1,6 +1,6 @@
 import React from 'react'
 
-export function Modal() {
+export default function Modal() {
   return (
     <div>Modal</div>
   )

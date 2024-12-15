@@ -1,6 +1,6 @@
-import { PokeCard } from "./components/PokeCard"
-import { Header } from "./components/Header"
-import { SideNav } from "./components/SideNav"
+import PokeCard  from "./components/PokeCard"
+import Header  from "./components/Header"
+import SideNav  from "./components/SideNav"
 
 import { useState } from "react"
 
@@ -11,7 +11,7 @@ function App() {
     <>
       <Header/>
       <SideNav pokemon={pokemon} setPokemon={setPokemon} />
-      <PokeCard setPokemon={setPokemon} />
+      <PokeCard pokemon={pokemon} />
     </>
   )
 }
