@@ -9,6 +9,11 @@ export default function PokeCard(props) {
   const [loading, setLoading] = useState(false)
 
   const {name, height, abilities, types, weight, sprites} = data || {}
+  const imgList = Object.keys(sprites || {}).filter(val => {
+    if (!sprites[val]) {return false}
+    if (['versions', 'other'].includes(val)) {return false}
+    return true
+  })
 
   // whenever user fetch a new pokemon, value selectedPokemon changes -> useEffect runs
   useEffect(() => {
@@ -73,7 +78,18 @@ export default function PokeCard(props) {
             )
           })}
       </div>
-      
+      <img className='default-img' 
+      src={'/pokemon/' + getFullPokedexNumber(pokemon) + '.png'} 
+      alt={`${name}-large-img`}/>
+
+      <div className='img-container'>
+        {imgList.map((spriteUrl, spriteIndex) => {
+          const imgUrl = sprites[spriteUrl]
+          return (
+            <img key={spriteIndex} src={imgUrl} alt={`${name}-img-${spriteUrl}`}/>
+          )
+        })}
+      </div>
     </div>
   )
 }
