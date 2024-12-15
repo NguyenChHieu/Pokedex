@@ -1,11 +1,14 @@
 import React from 'react'
 import { useEffect,useState } from 'react'
-import { getPokedexNumber } from '../utils'
+import { getFullPokedexNumber, getPokedexNumber } from '../utils'
+import  TypeCard  from './TypeCard'
 
-export function PokeCard(props) {
+export default function PokeCard(props) {
   const {pokemon} = props
   const [data, setData] = useState(null) 
   const [loading, setLoading] = useState(false)
+
+  const {name, height, abilities, types, weight, sprites} = data || {}
 
   // whenever user fetch a new pokemon, value selectedPokemon changes -> useEffect runs
   useEffect(() => {
@@ -49,8 +52,27 @@ export function PokeCard(props) {
       // if fetch from API, make sure to save information to the cahe
   }, [pokemon])
 
+  if (loading || !data) {
+    return (
+      <div>
+        <h2>Loading...</h2>
+      </div>
+    )
+  }
+
   return (
     <div className='poke-card'>
+      <div>
+        <h4>#{getFullPokedexNumber(pokemon)}</h4>
+        <h2>{name}</h2>
+      </div>
+      <div className='type-container'>
+          {types.map((typeObj, typeIndex) => {
+            return (
+              <TypeCard key={typeIndex} type={typeObj?.type?.name}/>
+            )
+          })}
+      </div>
       
     </div>
   )
