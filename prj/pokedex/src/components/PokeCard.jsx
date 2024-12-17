@@ -1,19 +1,61 @@
 import React from 'react'
 import { useEffect,useState } from 'react'
 import { getFullPokedexNumber, getPokedexNumber } from '../utils'
-import  TypeCard  from './TypeCard'
+import TypeCard  from './TypeCard'
+import Modal from './Modal'
 
 export default function PokeCard(props) {
   const {pokemon} = props
   const [data, setData] = useState(null) 
   const [loading, setLoading] = useState(false)
+  const [skill, setSkill] = useState(null)
+  const [loadingSkill, setLoadingSkill] = useState(false)
 
-  const {name, height, abilities, types, weight, sprites} = data || {}
+  const {name, height, abilities, stats, types, moves, sprites} = data || {}
   const imgList = Object.keys(sprites || {}).filter(val => {
     if (!sprites[val]) {return false}
     if (['versions', 'other'].includes(val)) {return false}
     return true
   })
+
+  async function fetchMoveData(move, moveUrl){
+    if(loadingSkill || !localStorage || !moveUrl) return
+
+    // check cache for move
+    let c = {}
+    if (localStorage.getItem('pokemon-moves')){
+      c = JSON.parse(localStorage.getItem('pokemon-moves'))
+    }
+
+    if (move in c){
+      setSkill(c[move])
+      console.log("Found move in cache")
+      return
+    }
+
+    try {
+      setLoadingSkill(true)
+      const res = await fetch(moveUrl)
+      const moveData = await res.json()
+      console.log("Fetched from API", moveData)
+      const description = moveData?.flavor_text_entries.filter
+      (val => {
+        return val.version_group.name == 'firered-leafgreen'
+      })[0]?.flavor_text
+
+      const skillData = {
+        name: move,
+        description
+      }
+      setSkill(skillData)
+      c[move] = skillData
+      localStorage.setItem('pokemon-moves', JSON.stringify(c))
+    } catch (err){
+      console.log(err)
+    } finally{
+      setLoadingSkill(false)
+    }
+  }
 
   // whenever user fetch a new pokemon, value selectedPokemon changes -> useEffect runs
   useEffect(() => {
@@ -29,6 +71,7 @@ export default function PokeCard(props) {
       // 2) check if the selected pokemon is in the cache
       if (pokemon in cache){
         setData(cache[pokemon])
+        console.log("Found pokemon in cache")
         return
       }
 
@@ -42,7 +85,7 @@ export default function PokeCard(props) {
           const res = await fetch(finalUrl)
           const pokemonData = await res.json()
           setData(pokemonData)
-
+          console.log("Fetched from API")
           cache[pokemon] = pokemonData
           localStorage.setItem('pokedex',JSON.stringify(cache))
         }
@@ -67,6 +110,19 @@ export default function PokeCard(props) {
 
   return (
     <div className='poke-card'>
+      {/** Cond rendering */}
+      {skill && (
+          <Modal handleCloseModal={() => {setSkill(null)}}>
+          <div>
+            <h6>Name</h6>
+            <h2 className='skill-name'>{skill.name.replaceAll("-", " ")}</h2>
+          </div>
+          <div>
+            <h6>Description</h6>
+            <p>{skill.description}</p>
+          </div>
+        </Modal>
+      )}
       <div>
         <h4>#{getFullPokedexNumber(pokemon)}</h4>
         <h2>{name}</h2>
@@ -89,6 +145,36 @@ export default function PokeCard(props) {
             <img key={spriteIndex} src={imgUrl} alt={`${name}-img-${spriteUrl}`}/>
           )
         })}
+      </div>
+      
+      <div>
+        <h3>Stats</h3>
+        <div className='stats-card'>
+          {stats.map((statObj, statIndex) => {
+            const {stat, base_stat} = statObj
+            return (
+              <div key={statIndex} className='stat-item'>
+                <p>{stat?.name.replaceAll("-", ' ')}</p>
+                <p>{base_stat}</p>  
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      
+      <div>
+        <h3>Moves</h3>
+        <div className='pokemon-move-grid'>
+          {moves.map((movesObj, moveIndex) => {
+            return (
+              <button className='button-card pokemon-move' 
+              key={moveIndex}
+              onClick={() => {fetchMoveData(movesObj?.move?.name, movesObj?.move?.url)}}>
+                <p>{movesObj?.move?.name.replaceAll('-', ' ')}</p>
+              </button>
+            )
+          })}
+          </div>
       </div>
     </div>
   )
