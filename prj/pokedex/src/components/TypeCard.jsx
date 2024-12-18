@@ -1,4 +1,3 @@
-import React from 'react'
 import { pokemonTypeColors } from '../utils'
 
 export default function TypeCard(props) {
